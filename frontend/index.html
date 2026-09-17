@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baymax - True Healthcare Companion</title>
+  <meta name="description" content="Digital-first empathic healthcare companion with non-contact rPPG vitals, acoustic respiratory diagnostics, and ESI v4 clinical triage.">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="baymax-mini-emblem" aria-hidden="true">
+        <div class="bridge"></div>
+      </div>
+      <div class="brand-titles">
+        <h1>BAYMAX <span class="badge-tag">Clinical Telemetry v1.0</span></h1>
+        <p>Personal Non-Contact Healthcare Companion & Triage System</p>
+      </div>
+    </div>
+
+    <div class="header-status-group">
+      <div class="status-pill" id="conn-status-pill">
+        <div class="status-dot" id="conn-status-dot"></div>
+        <span id="conn-status-text">INITIALIZING TELEMETRY</span>
+      </div>
+
+      <button id="btn-emergency-sos" class="emergency-btn" aria-label="Trigger Emergency SOS Protocol">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        EMERGENCY SOS
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Cockpit Grid -->
+  <main class="main-cockpit">
+
+    <!-- LEFT COLUMN: Non-Contact Perception HUD -->
+    <aside class="hud-panel" aria-label="Non-Contact Perception Sensors">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Optical Perception (rPPG)
+        </h2>
+        <span class="badge-tag">CHROM / POS</span>
+      </div>
+
+      <!-- Live Webcam Container -->
+      <div class="camera-container">
+        <video id="webcam-video" autoplay playsinline muted></video>
+        <canvas id="overlay-canvas"></canvas>
+        <div class="camera-scanline"></div>
+      </div>
+
+      <!-- Camera Controls -->
+      <div class="camera-controls">
+        <button id="btn-toggle-cam" class="btn-hud" aria-label="Start Camera Stream">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Start Camera
+        </button>
+      </div>
+
+      <!-- Acoustic Diagnostic Box -->
+      <div class="acoustic-box">
+        <div class="panel-header" style="border: none; padding-bottom: 0;">
+          <h3 class="panel-title" style="font-size: 0.82rem;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+            Acoustic Classifier
+          </h3>
+          <button id="btn-toggle-mic" class="btn-hud" style="flex: 0; padding: 0.25rem 0.6rem;">
+            Start Mic
+          </button>
+        </div>
+
+        <!-- 16-band Spectrum Analyzer -->
+        <div class="spectrum-bars" id="spectrum-bars" aria-label="Frequency Spectrum Analyzer"></div>
+
+        <!-- Diagnostic Flags -->
+        <div class="acoustic-flags">
+          <div class="diag-flag" id="flag-cough">
+            <span>COUGH</span> <span>None</span>
+          </div>
+          <div class="diag-flag" id="flag-wheeze">
+            <span>WHEEZE</span> <span>Normal</span>
+          </div>
+          <div class="diag-flag" id="flag-breath" style="grid-column: span 2;">
+            <span>RESP RATE</span> <span>16 /m</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER COLUMN: Baymax Empathic Interface & Waveforms -->
+    <section class="center-column" aria-label="Baymax Clinical Console">
+
+      <!-- Baymax Avatar Stage -->
+      <div class="baymax-stage">
+        <div class="baymax-face-container" id="baymax-face">
+          <div class="speaking-pulse-ring" id="speaking-ring"></div>
+          <div class="avatar-eyes-wrap">
+            <div class="avatar-eye" id="avatar-left-eye"></div>
+            <div class="avatar-bridge"></div>
+            <div class="avatar-eye" id="avatar-right-eye"></div>
+          </div>
+        </div>
+
+        <!-- Dialogue Speech Bubble -->
+        <div class="baymax-quote-bubble" id="baymax-quote-box">
+          <p id="baymax-quote-text">
+            Hello, I am Baymax, your personal healthcare companion. I was alerted to the need for medical attention. On a scale of 1 to 10, how would you rate your pain?
+          </p>
+          <span class="quote-source-tag" id="quote-source">Baymax Healthcare Protocol v1.0</span>
+        </div>
+      </div>
+
+      <!-- Real-Time PPG Waveform Card -->
+      <div class="telemetry-wave-card">
+        <div class="wave-header">
+          <h3 class="panel-title" style="font-size: 0.82rem;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Photoplethysmogram (PPG) Arterial Pulse Wave
+          </h3>
+          <span class="badge-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+            Live 60 FPS
+          </span>
+        </div>
+
+        <div class="wave-canvas-wrap">
+          <canvas id="ppg-canvas"></canvas>
+          <div class="wave-grid-lines"></div>
+        </div>
+      </div>
+
+      <!-- Vitals Metrics Grid -->
+      <div class="vitals-grid">
+        <!-- Heart Rate -->
+        <div class="vital-metric-card">
+          <span class="vital-label">Heart Rate (BPM)</span>
+          <div class="vital-value-wrap">
+            <span class="vital-val" id="val-bpm">72</span>
+            <span class="vital-unit">BPM</span>
+          </div>
+          <span class="vital-status-sub" id="status-bpm">Normal Resting</span>
+        </div>
+
+        <!-- HRV (RMSSD) -->
+        <div class="vital-metric-card">
+          <span class="vital-label">Autonomic HRV</span>
+          <div class="vital-value-wrap">
+            <span class="vital-val" id="val-hrv">45</span>
+            <span class="vital-unit">ms</span>
+          </div>
+          <span class="vital-status-sub" id="status-hrv">Balanced Tone</span>
+        </div>
+
+        <!-- Respiratory Rate -->
+        <div class="vital-metric-card">
+          <span class="vital-label">Respiration</span>
+          <div class="vital-value-wrap">
+            <span class="vital-val" id="val-rr">16</span>
+            <span class="vital-unit">/min</span>
+          </div>
+          <span class="vital-status-sub" id="status-rr">Eupnea (Normal)</span>
+        </div>
+
+        <!-- Stress / Panic -->
+        <div class="vital-metric-card">
+          <span class="vital-label">Vocal Stress</span>
+          <div class="vital-value-wrap">
+            <span class="vital-val" id="val-stress">18%</span>
+            <span class="vital-unit">Score</span>
+          </div>
+          <span class="vital-status-sub" id="status-stress">Calm & Stable</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Clinical Triage & Pain Scale -->
+    <aside class="hud-panel clinical-column" aria-label="Clinical Assessment and Triage">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Clinical Intake
+        </h2>
+        <button id="btn-toggle-voice" class="btn-hud active" style="flex: 0; padding: 0.25rem 0.6rem;">
+          Voice: ON
+        </button>
+      </div>
+
+      <!-- Wong-Baker FACES Pain Scale -->
+      <div class="pain-scale-box">
+        <div class="pain-header">
+          <span>Wong-Baker Pain Scale</span>
+          <span class="pain-score-pill" id="pain-score-pill">0 / 10</span>
+        </div>
+
+        <div class="pain-faces-row">
+          <button class="pain-btn selected" data-score="0" aria-label="Pain 0: No Hurt">
+            <span class="pain-emoji">😊</span>
+            <span class="pain-num">0</span>
+          </button>
+          <button class="pain-btn" data-score="2" aria-label="Pain 2: Hurts Little Bit">
+            <span class="pain-emoji">🙂</span>
+            <span class="pain-num">2</span>
+          </button>
+          <button class="pain-btn" data-score="4" aria-label="Pain 4: Hurts Little More">
+            <span class="pain-emoji">😐</span>
+            <span class="pain-num">4</span>
+          </button>
+          <button class="pain-btn" data-score="6" aria-label="Pain 6: Hurts Even More">
+            <span class="pain-emoji">😟</span>
+            <span class="pain-num">6</span>
+          </button>
+          <button class="pain-btn severe" data-score="8" aria-label="Pain 8: Hurts Whole Lot">
+            <span class="pain-emoji">😣</span>
+            <span class="pain-num">8</span>
+          </button>
+          <button class="pain-btn severe" data-score="10" aria-label="Pain 10: Hurts Worst">
+            <span class="pain-emoji">😭</span>
+            <span class="pain-num">10</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Symptom Consultation Input -->
+      <div class="symptom-console">
+        <label for="symptom-input" style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-family: var(--font-mono);">
+          Describe Symptoms or Health Inquiry
+        </label>
+
+        <!-- Quick Select Symptom Chips -->
+        <div class="quick-chips-wrap">
+          <button type="button" class="symptom-chip" data-symptom="Crushing chest tightness radiating to left arm">Chest Tightness</button>
+          <button type="button" class="symptom-chip" data-symptom="Persistent wet productive cough with phlegm">Productive Cough</button>
+          <button type="button" class="symptom-chip" data-symptom="High fever and body chills">Fever & Chills</button>
+          <button type="button" class="symptom-chip" data-symptom="Audible wheezing and shortness of breath">Wheezing / Asthma</button>
+          <button type="button" class="symptom-chip" data-symptom="Severe throbbing migraine headache">Throbbing Headache</button>
+          <button type="button" class="symptom-chip" data-symptom="Routine wellness and preventive advice">Routine Checkup</button>
+        </div>
+
+        <div class="input-bar-wrap">
+          <input 
+            type="text" 
+            id="symptom-input" 
+            class="symptom-input" 
+            placeholder="Type your symptoms here..."
+            autocomplete="off"
+          >
+          <button id="consult-btn" class="consult-btn" aria-label="Consult Baymax">
+            Consult
+          </button>
+        </div>
+      </div>
+
+      <!-- Clinical Triage Assessment Verdict -->
+      <div class="triage-verdict-card">
+        <div class="panel-header" style="border: none; padding-bottom: 0;">
+          <h3 class="panel-title" style="font-size: 0.8rem;">ESI v4 Triage Verdict</h3>
+        </div>
+
+        <div 
+          id="triage-badge" 
+          class="triage-level-badge" 
+          style="background: rgba(0, 240, 255, 0.15); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.4);"
+        >
+          ESI Level 5: NON-URGENT (Routine Health Advice / Self-Care)
+        </div>
+
+        <ul class="triage-actions-list" id="triage-actions">
+          <li>Routine wellness and vital sign monitoring active.</li>
+          <li>Baymax will remain available until you are satisfied with your care.</li>
+        </ul>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Native Emergency Escalation Modal Dialog -->
+  <dialog id="emergency-dialog" aria-labelledby="emergency-title">
+    <div class="dialog-header">
+      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <h2 id="emergency-title">CRITICAL MEDICAL ESCALATION ACTIVATED</h2>
+    </div>
+
+    <div class="dialog-body">
+      <p style="font-size: 0.92rem; color: #fecdd3; line-height: 1.5;">
+        Baymax's clinical triage safeguards have detected red-flag symptoms or critical vital sign abnormalities requiring immediate medical evaluation.
+      </p>
+
+      <div class="emergency-callouts" id="emergency-callouts">
+        <div class="callout-item">
+          <svg width="18" height="18" fill="none" stroke="#ff3366" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span>Call 911 or your local emergency dispatch immediately.</span>
+        </div>
+        <div class="callout-item">
+          <svg width="18" height="18" fill="none" stroke="#ff3366" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span>Do not drive yourself to the hospital; await paramedics or have a companion drive you.</span>
+        </div>
+      </div>
+
+      <div class="dialog-actions-row">
+        <button id="dismiss-emergency" class="btn-dismiss" type="button">
+          Acknowledge
+        </button>
+        <a href="tel:911" class="btn-dial-911">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          DIAL 911 NOW
+        </a>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="/static/js/baymax_avatar.js"></script>
+  <script src="/static/js/camera_stream.js"></script>
+  <script src="/static/js/audio_stream.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+  <script src="/static/js/voice_synth.js"></script>
+  <script src="/static/js/app.js"></script>
+
+</body>
+</html>
